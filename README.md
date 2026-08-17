@@ -55,7 +55,7 @@ The server returned:
 
 This traffic was associated with the suspicious executable download.
 
-![HTTP Executable Transfer](screenshots/01-http-executable-transfer.png)
+![HTTP Executable Transfer](screenshots/IMG_0019.jpeg)
 
 ---
 
@@ -65,7 +65,7 @@ Inspection of the HTTP file data revealed an `MZ` header and Portable Executable
 
 The `MZ` signature is characteristic of Windows executable files and provided additional evidence that the transferred object contained executable content.
 
-![PE File Identification](screenshots/02-pe-file-identification.png)
+![PE File Identification](screenshots/IMG_0021.jpeg)
 
 ---
 
@@ -75,7 +75,7 @@ PowerShell and TShark were used to extract HTTP file data from selected packets 
 
 Hashing provides a repeatable identifier that analysts can use to compare suspicious files against threat-intelligence sources and malware repositories.
 
-![SHA256 File Analysis](screenshots/03-sha256-file-analysis.png)
+![SHA256 File Analysis](screenshots/IMG_0022.jpeg)
 
 ---
 
@@ -89,7 +89,7 @@ The investigation connected the internal host `192.168.1.96` with an HTTP reques
 
 This correlation helped reconstruct the sequence of network activity surrounding the suspicious download.
 
-![Compromised Host Investigation](screenshots/04-compromised-host-investigation.png)
+![Compromised Host Investigation](screenshots/IMG_9981.jpeg)
 
 ---
 
