@@ -57,7 +57,7 @@ Splunk analysis identified:
 
 The failed attempts occurred within seconds of one another, providing the activity necessary to test a repeated-failed-logon detection.
 
-![Failed Logon Detection](screenshots/Screenshot%20%28488%29.png)
+![Failed Logon Detection](screenshots/IMG_3785.jpeg)
 
 ## Detection Engineering
 
@@ -85,7 +85,7 @@ Configuration:
 - Severity: Medium
 - Action: Add to Triggered Alerts
 
-![Alert Configuration](screenshots/Screenshot%20%28494%29.png)
+![Alert Configuration](screenshots/IMG_3786.jpeg)
 
 ## Detection Validation
 
@@ -93,13 +93,13 @@ Additional controlled failed authentication attempts were generated after the al
 
 Splunk successfully triggered the alert, validating the detection from endpoint activity through automated SIEM alerting.
 
-![Triggered Alert](screenshots/Screenshot%20%28501%29.png)
+![Triggered Alert](screenshots/IMG_3787.jpeg)
 
 ## Event Investigation
 
 The underlying Event ID 4625 records were reviewed to validate the account, logon type, failure reason, status codes, source address, workstation, and timing.
 
-![Event 4625 Investigation](screenshots/Screenshot%20%28503%29.png)
+![Event 4625 Investigation](screenshots/IMG_3788.jpeg)
 
 ## Response and Remediation
 
