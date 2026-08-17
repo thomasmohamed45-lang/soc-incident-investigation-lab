@@ -1,1 +1,5 @@
-
+index=* sourcetype="WinEventLog:Security" EventCode=4625
+| bin _time span=5m
+| stats count as Failed_Logins by _time Account_Name Source_Network_Address
+| where Failed_Logins >= 5 AND NOT match(Account_Name, "\$$")
+| sort - Failed_Logins
