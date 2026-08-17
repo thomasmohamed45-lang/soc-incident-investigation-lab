@@ -89,8 +89,7 @@ The investigation connected the internal host `192.168.1.96` with an HTTP reques
 
 This correlation helped reconstruct the sequence of network activity surrounding the suspicious download.
 
-![Compromised Host Investigation](screenshots/IMG_9981.jpeg)
-
+![Compromised Host Investigation](screenshots/IMG_9981%20%281%29.jpeg)
 ---
 
 ## Indicators of Compromise
