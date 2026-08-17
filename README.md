@@ -1,158 +1,77 @@
-# SOC Incident Investigation Lab
+# SOC Incident Investigation & SIEM Detection Lab
 
 ## Overview
 
-This project documents a hands-on Security Operations Center (SOC) investigation of suspicious network activity using Wireshark and PowerShell.
+This project demonstrates a hands-on Security Operations Center (SOC) workflow using Splunk Enterprise to collect Windows security telemetry, investigate failed authentication activity, develop an SPL detection rule, and configure automated alerting.
 
-The investigation analyzed a packet capture (PCAP) to identify a potentially compromised Windows endpoint, trace a suspicious executable download, inspect the transferred file, and calculate cryptographic hashes for further analysis.
+The lab was built in an isolated VirtualBox environment using an Ubuntu Server running Splunk Enterprise and a Windows endpoint running the Splunk Universal Forwarder.
 
-The objective was to simulate the workflow of a SOC analyst investigating network-based indicators of compromise (IOCs).
+## Lab Architecture
 
----
+Windows Endpoint  
+↓  
+Splunk Universal Forwarder  
+↓ TCP 9997  
+Ubuntu Splunk Enterprise Server  
+↓  
+Windows Security Event Analysis  
+↓  
+SPL Detection & Alerting
 
-## Tools Used
+## Technologies Used
 
-- Wireshark
-- TShark
-- Windows PowerShell
-- PCAP network traffic analysis
-- SHA-256 hashing
-- HTTP and DNS analysis
-
----
-
-## Investigation Summary
-
-Analysis of the network capture identified suspicious activity associated with the Windows endpoint:
-
-**Hostname:** `FlashGordon-PC`
-
-**Internal IP:** `192.168.1.96`
-
-Network traffic showed the endpoint communicating with external infrastructure and downloading an executable file over HTTP.
-
-A suspicious HTTP request was identified involving:
-
-**External IP:** `145.131.10.21`
-
-**Downloaded file:** `trow.exe`
-
-The HTTP transaction showed the server successfully responding with an HTTP `200 OK`, confirming that file content was transferred to the internal system.
-
----
-
-## Investigation Evidence
-
-### 1. Suspicious HTTP File Transfer
-
-Wireshark analysis identified an HTTP response from `145.131.10.21` to the internal endpoint `192.168.1.96`.
-
-The server returned:
-
-- HTTP status: `200 OK`
-- Content-Type: `application/octet-stream`
-- Content-Length: approximately 330 KB
-
-This traffic was associated with the suspicious executable download.
-
-![HTTP Executable Transfer](screenshots/IMG_0019.jpeg)
-
----
-
-### 2. Executable File Identification
-
-Inspection of the HTTP file data revealed an `MZ` header and Portable Executable (PE) structure.
-
-The `MZ` signature is characteristic of Windows executable files and provided additional evidence that the transferred object contained executable content.
-
-![PE File Identification](screenshots/IMG_0021.jpeg)
-
----
-
-### 3. SHA-256 File Analysis
-
-PowerShell and TShark were used to extract HTTP file data from selected packets and calculate SHA-256 hashes.
-
-Hashing provides a repeatable identifier that analysts can use to compare suspicious files against threat-intelligence sources and malware repositories.
-
-![SHA256 File Analysis](screenshots/IMG_0022.jpeg)
-
----
-
-### 4. Compromised Host Investigation
-
-Further analysis associated the suspicious activity with:
-
-`FlashGordon-PC`
-
-The investigation connected the internal host `192.168.1.96` with an HTTP request for `trow.exe` and the corresponding HTTP response from `145.131.10.21`.
-
-This correlation helped reconstruct the sequence of network activity surrounding the suspicious download.
-
-![Compromised Host Investigation](screenshots/IMG_9981%20%281%29.jpeg)
----
-
-## Indicators of Compromise
-
-| Indicator | Type | Description |
-|---|---|---|
-| `192.168.1.96` | Internal IP | Investigated Windows endpoint |
-| `FlashGordon-PC` | Hostname | Host associated with suspicious traffic |
-| `145.131.10.21` | External IP | Server involved in HTTP file transfer |
-| `trow.exe` | File | Suspicious Windows executable |
-| `lounge-hair-studio.nl` | Domain | Domain observed in executable download traffic |
-
-Additional suspicious domains observed during network analysis included:
-
-- `zupraha.cz`
-- `wanoa.com`
-- `kursavto.ru`
-
----
-
-## Investigation Workflow
-
-1. Loaded the PCAP into Wireshark.
-2. Identified the primary internal endpoint involved in suspicious traffic.
-3. Examined DNS, DHCP, NBNS, and HTTP activity.
-4. Identified the hostname associated with the endpoint.
-5. Investigated suspicious external communications.
-6. Located an HTTP executable download.
-7. Correlated the HTTP request with its `200 OK` response.
-8. Inspected the transferred file data.
-9. Identified the Windows PE executable structure.
-10. Used TShark and PowerShell to extract and hash HTTP file data.
-11. Documented indicators of compromise and investigation findings.
-
----
-
-## SOC Skills Demonstrated
-
-This project demonstrates practical experience with:
-
-- Network traffic analysis
-- PCAP investigation
-- Security event correlation
-- HTTP traffic analysis
-- DNS analysis
-- Endpoint identification
-- Indicator of compromise identification
-- Suspicious file analysis
-- SHA-256 hashing
-- Wireshark and TShark
+- Splunk Enterprise
+- Splunk Universal Forwarder
+- Windows Security Event Logs
+- Ubuntu Server
+- VirtualBox
 - PowerShell
-- Incident documentation
+- SSH
+- SPL (Search Processing Language)
 
----
+## Data Collection
 
-## Conclusion
+The Windows endpoint was configured to forward the following event logs to Splunk:
 
-The investigation identified a Windows endpoint exhibiting suspicious network behavior and reconstructed an HTTP executable download involving external infrastructure.
+- Security
+- System
+- Application
 
-By correlating endpoint information, network communications, HTTP transactions, executable file characteristics, and cryptographic hashes, the investigation demonstrates a structured SOC workflow for identifying and documenting potentially malicious activity from network evidence.
+Splunk successfully received Windows Security telemetry from the endpoint through the Universal Forwarder.
 
----
+## Incident Simulation
 
-## Disclaimer
+A temporary lab account named `SOC-TestUser` was created.
 
-This project was completed in an authorized cybersecurity lab environment for educational and portfolio purposes.
+Multiple controlled authentication attempts were performed using an incorrect password to generate Windows Security Event ID `4625` events.
+
+This simulated repeated failed authentication activity in a safe lab environment.
+
+## Investigation
+
+Splunk was used to investigate the failed authentication events.
+
+The investigation identified:
+
+- EventCode: `4625`
+- Account: `SOC-TestUser`
+- Logon Type: `3` (Network)
+- Failure Reason: Unknown user name or bad password
+- Status: `0xC000006D`
+- Sub Status: `0xC000006A`
+- Source Network Address: `127.0.0.1`
+
+The failed attempts occurred within seconds of one another, providing the activity necessary to test a repeated-failed-logon detection.
+
+![Failed Logon Investigation](screenshots/Screenshot%20%28488%29.png)
+
+## Detection Engineering
+
+An SPL detection was developed to identify accounts generating five or more failed Windows logons within a five-minute window.
+
+```spl
+index=* sourcetype="WinEventLog:Security" EventCode=4625
+| bin _time span=5m
+| stats count as Failed_Logins by _time Account_Name Source_Network_Address
+| where Failed_Logins >= 5 AND NOT match(Account_Name, "\$$")
+| sort - Failed_Logins
